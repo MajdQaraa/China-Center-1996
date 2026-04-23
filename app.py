@@ -9,18 +9,16 @@ from email.mime.text import MIMEText
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
-# تخزين الأكواد مؤقت
 reset_codes = {}
 
 # =====================
-# DB
+# DATABASE
 # =====================
 def get_db():
-    conn = sqlite3.connect("/tmp/users.db")  # 🔥 مهم جدًا
+    conn = sqlite3.connect("/tmp/users.db")  # 🔥 مهم
     conn.row_factory = sqlite3.Row
     return conn
 
-# إنشاء الجدول تلقائي
 def create_table():
     conn = get_db()
     cursor = conn.cursor()
@@ -36,18 +34,17 @@ def create_table():
     conn.commit()
     conn.close()
 
-# تشغيل عند بداية السيرفر
 create_table()
 
 # =====================
-# HOME PAGE
+# HOME
 # =====================
 @app.route("/")
 def home():
     return send_from_directory(".", "index.html")
 
 # =====================
-# SERVE FILES
+# STATIC FILES
 # =====================
 @app.route("/<path:path>")
 def static_files(path):
@@ -67,7 +64,7 @@ def signup():
         if not email or not password:
             return jsonify({"success": False, "message": "Missing data ❌"})
 
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
         hashed_password = sqlite3.Binary(hashed_password)
 
         conn = get_db()
@@ -88,7 +85,7 @@ def signup():
 
     except Exception as e:
         print("SIGNUP ERROR:", e)
-        return jsonify({"success": False, "message": str(e)})  # 🔥 يطلع الخطأ الحقيقي
+        return jsonify({"success": False, "message": str(e)})
 
 # =====================
 # LOGIN
@@ -106,13 +103,10 @@ def login():
 
         cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
-
         conn.close()
 
         if user:
-            stored_password = bytes(user["password"])
-
-            if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+            if bcrypt.checkpw(password.encode(), bytes(user["password"])):
                 return jsonify({"success": True})
 
         return jsonify({"success": False, "message": "Wrong email or password ❌"})
@@ -130,12 +124,8 @@ def send_code():
         data = request.get_json()
         email = data.get("email")
 
-        if not email:
-            return jsonify({"success": False})
-
         conn = get_db()
         cursor = conn.cursor()
-
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
         conn.close()
@@ -146,8 +136,8 @@ def send_code():
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "your_email@gmail.com"        # 🔥 حط إيميلك
-        password = "your_app_password_here"    # 🔥 حط app password
+        sender = "your_email@gmail.com"
+        password = "your_app_password"
 
         msg = MIMEText(f"Your reset code is: {code}")
         msg["Subject"] = "Password Reset"
@@ -177,16 +167,13 @@ def reset_password():
         code = data.get("code")
         new_password = data.get("new_password")
 
-        if not email or not code or not new_password:
-            return jsonify({"success": False, "message": "Missing data ❌"})
-
         if email not in reset_codes:
             return jsonify({"success": False, "message": "Send code first ❌"})
 
         if reset_codes[email] != code:
             return jsonify({"success": False, "message": "Wrong code ❌"})
 
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
         hashed_password = sqlite3.Binary(hashed_password)
 
         conn = get_db()
