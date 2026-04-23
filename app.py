@@ -9,18 +9,18 @@ from email.mime.text import MIMEText
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
-# 🔥 تخزين الأكواد مؤقت
+# تخزين الأكواد مؤقت
 reset_codes = {}
 
 # =====================
 # DB
 # =====================
 def get_db():
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect("/tmp/users.db")  # 🔥 مهم جدًا
     conn.row_factory = sqlite3.Row
     return conn
 
-# 🔥 إنشاء الجدول تلقائي
+# إنشاء الجدول تلقائي
 def create_table():
     conn = get_db()
     cursor = conn.cursor()
@@ -36,7 +36,7 @@ def create_table():
     conn.commit()
     conn.close()
 
-# 🔥 تشغيل إنشاء الجدول أول ما السيرفر يشتغل
+# تشغيل عند بداية السيرفر
 create_table()
 
 # =====================
@@ -44,7 +44,7 @@ create_table()
 # =====================
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")  # غيّر الاسم إذا صفحتك مختلفة
+    return send_from_directory(".", "index.html")
 
 # =====================
 # SERVE FILES
@@ -88,7 +88,7 @@ def signup():
 
     except Exception as e:
         print("SIGNUP ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False, "message": str(e)})  # 🔥 يطلع الخطأ الحقيقي
 
 # =====================
 # LOGIN
@@ -119,7 +119,7 @@ def login():
 
     except Exception as e:
         print("LOGIN ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False, "message": str(e)})
 
 # =====================
 # SEND CODE
@@ -146,8 +146,8 @@ def send_code():
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "majdahmadqaraa@gmail.com"
-        password = "ofyf nskl tcse brne"
+        sender = "your_email@gmail.com"        # 🔥 حط إيميلك
+        password = "your_app_password_here"    # 🔥 حط app password
 
         msg = MIMEText(f"Your reset code is: {code}")
         msg["Subject"] = "Password Reset"
@@ -163,7 +163,7 @@ def send_code():
 
     except Exception as e:
         print("EMAIL ERROR:", e)
-        return jsonify({"success": False})
+        return jsonify({"success": False, "message": str(e)})
 
 # =====================
 # RESET PASSWORD
@@ -206,7 +206,7 @@ def reset_password():
 
     except Exception as e:
         print("RESET ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False, "message": str(e)})
 
 # =====================
 # RUN
