@@ -1,0 +1,151 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial;
+}
+
+body {
+    height: 100vh;
+}
+
+/* الفيديو */
+.myVideo {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* الحاوية */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* العنوان */
+.title {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 15px 40px;
+    font-size: 28px;
+    margin-bottom: 50px;
+    border-radius: 6px;
+}
+
+/* الكروت */
+.cards {
+    display: flex;
+    gap: 60px;
+}
+
+/* كل مربع */
+.card {
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 220px;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+/* عنوان داخل المربع */
+.card h2 {
+    margin-bottom: 15px;
+}
+
+/* الصورة */
+.card img {
+    width: 100%;
+    border-radius: 5px;
+}
+
+/* تأثير hover */
+.card:hover {
+    transform: scale(1.07);
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* 🔥 الأيقونات في الصفحة الرئيسية */
+.social-icons{
+    position: fixed;
+    bottom: 20px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    z-index: 10;
+}
+
+.social-icons a{
+    width: 45px;
+    height: 45px;
+    margin: 0 10px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+
+    transition: 0.3s;
+}
+
+/* الألوان */
+.social-icons a:nth-child(1){ background-color: #FF0000; }
+.social-icons a:nth-child(2){ background-color: #25D366; }
+.social-icons a:nth-child(3){ background-color: #1877F2; }
+.social-icons a:nth-child(4){ background-color: #FF5722; }
+
+/* Hover */
+.social-icons a:hover{
+    transform: scale(1.15);
+    background-color: rgba(0,0,0,0.6);
+}
+
+/* 🔥 موبايل للصفحة الرئيسية */
+@media (max-width: 480px){
+
+    .container{
+        height: auto;
+        padding-top: 40px;
+    }
+
+    .title{
+        font-size: 20px;
+        padding: 10px 20px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .cards{
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card{
+        width: 90%;
+        max-width: 300px;
+    }
+
+    .card h2{
+        font-size: 18px;
+    }
+
+    .social-icons{
+        bottom: 10px;
+    }
+
+    .social-icons a{
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}

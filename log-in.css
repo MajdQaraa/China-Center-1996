@@ -1,0 +1,169 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body{
+    background-image: url("Liquidação_ Chery vai vender QQ por menos de R$ 20 mil.jpg");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+
+    padding: 15px;
+}
+
+/* الصندوق */
+.Page-Login{
+    width: 100%;
+    max-width: 420px;
+    background-color: rgba(139, 0, 0, 0.85);
+    color: white;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+/* الفورم */
+.Page-Login form{
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+}
+
+.Page-Login h1{
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* الحقول */
+.input-Login{
+    display: flex;
+    flex-direction: column;
+}
+
+.input-Login input{
+    width: 100%;
+    padding: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background-color: transparent;
+    color: white;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.input-Login input::placeholder{
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* checkbox */
+.remmember-login{
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* 🔥 نسيت كلمة المرور */
+.forgot-password{
+    text-align: right;
+    margin-bottom: 15px;
+}
+
+.forgot-password a{
+    color: white;
+    font-size: 13px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.forgot-password a:hover{
+    text-decoration: underline;
+}
+
+/* زر */
+.btn{
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:hover{
+    background-color: #ddd;
+}
+
+/* تسجيل */
+.register{
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.register a{
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* الأيقونات */
+.social-icons{
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+}
+
+.social-icons a{
+    width: 45px;
+    height: 45px;
+    margin: 0 10px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+
+    transition: 0.3s;
+}
+
+.social-icons a:nth-child(1){ background-color: #FF0000; }
+.social-icons a:nth-child(2){ background-color: #25D366; }
+.social-icons a:nth-child(3){ background-color: #1877F2; }
+.social-icons a:nth-child(4){ background-color: #FF5722; }
+
+.social-icons a:hover{
+    transform: scale(1.15);
+    background-color: rgba(0,0,0,0.6);
+}
+
+/* موبايل */
+@media (max-width: 480px){
+    .Page-Login{
+        max-width: 100%;
+    }
+
+    .Page-Login form{
+        padding: 20px;
+    }
+
+    .input-Login input{
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .btn{
+        padding: 10px;
+    }
+}
