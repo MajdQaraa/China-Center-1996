@@ -124,7 +124,7 @@ def send_code():
         email = data.get("email")
 
         if not email:
-            return jsonify({"success": False})
+            return jsonify({"success": False, "message": "Email required ❌"})
 
         conn = get_db()
         cursor = conn.cursor()
@@ -135,40 +135,21 @@ def send_code():
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
 
-        # 🔥 توليد الكود
+        # 🔥 توليد الكود فقط
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "majdahmadqaraa@gmail.com"
-        password = "eyux ccoi gklv twbd"
+        print("RESET CODE:", code)  # 🔥 مهم
 
-        msg = MIMEText(f"Your reset code is: {code}")
-        msg["Subject"] = "Password Reset"
-        msg["From"] = sender
-        msg["To"] = email
-
-        try:
-            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-            server.login(sender, password)
-            server.sendmail(sender, email, msg.as_string())
-            server.quit()
-
-            print("EMAIL SENT ✅")
-            return jsonify({"success": True})
-
-        except Exception as e:
-            print("EMAIL FAILED:", e)
-
-            # 🔥 fallback
-            return jsonify({
-                "success": True,
-                "code": code,
-                "message": "Email failed ⚠️"
-            })
+        # 🔥 رجع الكود مباشرة بدون إيميل
+        return jsonify({
+            "success": True,
+            "code": code
+        })
 
     except Exception as e:
         print("SEND CODE ERROR:", e)
-        return jsonify({"success": False})
+        return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
 # RESET PASSWORD
