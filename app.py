@@ -14,7 +14,7 @@ CORS(app)
 reset_codes = {}
 
 # =====================
-# DB (FIXED)
+# DB
 # =====================
 def get_db():
     db_path = os.path.join(os.getcwd(), "users.db")
@@ -22,7 +22,6 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 🔥 إنشاء قاعدة البيانات تلقائي
 def create_database():
     conn = get_db()
     cursor = conn.cursor()
@@ -39,19 +38,15 @@ def create_database():
     conn.close()
     print("Database ready ✅")
 
-# 🔥 تشغيلها أول ما السيرفر يشتغل
 create_database()
 
 # =====================
-# HOME PAGE
+# HOME
 # =====================
 @app.route("/")
 def home():
     return send_from_directory(".", "index.html")
 
-# =====================
-# SERVE FILES
-# =====================
 @app.route("/<path:path>")
 def static_files(path):
     return send_from_directory(".", path)
@@ -63,22 +58,21 @@ def static_files(path):
 def signup():
     try:
         data = request.get_json()
-
         email = data.get("email")
         password = data.get("password")
 
         if not email or not password:
             return jsonify({"success": False, "message": "Missing data ❌"})
 
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        hashed_password = sqlite3.Binary(hashed_password)
+        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        hashed = sqlite3.Binary(hashed)
 
         conn = get_db()
         cursor = conn.cursor()
 
         cursor.execute(
             "INSERT INTO users (email, password) VALUES (?, ?)",
-            (email, hashed_password)
+            (email, hashed)
         )
 
         conn.commit()
@@ -91,7 +85,7 @@ def signup():
 
     except Exception as e:
         print("SIGNUP ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False})
 
 # =====================
 # LOGIN
@@ -100,7 +94,6 @@ def signup():
 def login():
     try:
         data = request.get_json()
-
         email = data.get("email")
         password = data.get("password")
 
@@ -109,20 +102,17 @@ def login():
 
         cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
-
         conn.close()
 
         if user:
-            stored_password = bytes(user["password"])
-
-            if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+            if bcrypt.checkpw(password.encode(), bytes(user["password"])):
                 return jsonify({"success": True})
 
         return jsonify({"success": False, "message": "Wrong email or password ❌"})
 
     except Exception as e:
         print("LOGIN ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False})
 
 # =====================
 # SEND CODE
@@ -130,43 +120,25 @@ def login():
 @app.route("/send-code", methods=["POST"])
 def send_code():
     try:
-        # 🔥 تحقق من البيانات
         data = request.get_json()
-        if not data:
-            return jsonify({"success": False, "message": "No data received ❌"})
-
         email = data.get("email")
-        if not email:
-            return jsonify({"success": False, "message": "Email required ❌"})
 
-        # =====================
-        # 🔥 تحقق من قاعدة البيانات
-        # =====================
+        if not email:
+            return jsonify({"success": False})
+
         conn = get_db()
         cursor = conn.cursor()
-
-        try:
-            cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-            user = cursor.fetchone()
-        except Exception as db_error:
-            print("DB ERROR:", db_error)
-            conn.close()
-            return jsonify({"success": False, "message": "Database error ❌"})
-
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
         conn.close()
 
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
 
-        # =====================
         # 🔥 توليد الكود
-        # =====================
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        # =====================
-        # 🔥 إعداد الإيميل
-        # =====================
         sender = "majdahmadqaraa@gmail.com"
         password = "eyux ccoi gklv twbd"
 
@@ -175,27 +147,28 @@ def send_code():
         msg["From"] = sender
         msg["To"] = email
 
-        # =====================
-        # 🔥 إرسال الإيميل
-        # =====================
         try:
             server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-            server.ehlo()
             server.login(sender, password)
             server.sendmail(sender, email, msg.as_string())
             server.quit()
 
-            print("EMAIL SENT SUCCESS ✅")
+            print("EMAIL SENT ✅")
+            return jsonify({"success": True})
 
-        except Exception as mail_error:
-            print("EMAIL ERROR:", mail_error)
-            return jsonify({"success": False, "message": "Email failed ❌"})
+        except Exception as e:
+            print("EMAIL FAILED:", e)
 
-        return jsonify({"success": True})
+            # 🔥 fallback
+            return jsonify({
+                "success": True,
+                "code": code,
+                "message": "Email failed ⚠️"
+            })
 
     except Exception as e:
-        print("GENERAL ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        print("SEND CODE ERROR:", e)
+        return jsonify({"success": False})
 
 # =====================
 # RESET PASSWORD
@@ -210,7 +183,7 @@ def reset_password():
         new_password = data.get("new_password")
 
         if not email or not code or not new_password:
-            return jsonify({"success": False, "message": "Missing data ❌"})
+            return jsonify({"success": False})
 
         if email not in reset_codes:
             return jsonify({"success": False, "message": "Send code first ❌"})
@@ -218,15 +191,15 @@ def reset_password():
         if reset_codes[email] != code:
             return jsonify({"success": False, "message": "Wrong code ❌"})
 
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-        hashed_password = sqlite3.Binary(hashed_password)
+        hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
+        hashed = sqlite3.Binary(hashed)
 
         conn = get_db()
         cursor = conn.cursor()
 
         cursor.execute(
             "UPDATE users SET password = ? WHERE email = ?",
-            (hashed_password, email)
+            (hashed, email)
         )
 
         conn.commit()
@@ -238,7 +211,7 @@ def reset_password():
 
     except Exception as e:
         print("RESET ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        return jsonify({"success": False})
 
 # =====================
 # RUN
