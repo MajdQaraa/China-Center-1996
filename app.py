@@ -161,9 +161,18 @@ def send_code():
 
         response = requests.post(url, json=payload, headers=headers)
 
+        print("STATUS CODE:", response.status_code)
         print("EMAIL RESPONSE:", response.text)
 
-        return jsonify({"success": True})
+        # 🔥 التعديل المهم هنا
+        if response.status_code == 201:
+            return jsonify({"success": True})
+        else:
+            return jsonify({
+                "success": False,
+                "message": "Email not sent",
+                "debug": response.text
+            })
 
     except Exception as e:
         print("BREVO ERROR:", e)
