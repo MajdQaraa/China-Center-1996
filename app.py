@@ -2,13 +2,12 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sqlite3
 import bcrypt
-import smtplib
 import random
 import os
-from email.mime.text import MIMEText
+import requests
 
 app = Flask(__name__, static_folder='.')
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 🔥 تخزين الأكواد مؤقت
 reset_codes = {}
@@ -21,6 +20,7 @@ def get_db():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def create_database():
     conn = get_db()
@@ -38,6 +38,7 @@ def create_database():
     conn.close()
     print("Database ready ✅")
 
+
 create_database()
 
 # =====================
@@ -46,6 +47,7 @@ create_database()
 @app.route("/")
 def home():
     return send_from_directory(".", "index.html")
+
 
 @app.route("/<path:path>")
 def static_files(path):
@@ -87,6 +89,7 @@ def signup():
         print("SIGNUP ERROR:", e)
         return jsonify({"success": False})
 
+
 # =====================
 # LOGIN
 # =====================
@@ -104,9 +107,8 @@ def login():
         user = cursor.fetchone()
         conn.close()
 
-        if user:
-            if bcrypt.checkpw(password.encode(), bytes(user["password"])):
-                return jsonify({"success": True})
+        if user and bcrypt.checkpw(password.encode(), user["password"]):
+            return jsonify({"success": True})
 
         return jsonify({"success": False, "message": "Wrong email or password ❌"})
 
@@ -114,12 +116,10 @@ def login():
         print("LOGIN ERROR:", e)
         return jsonify({"success": False})
 
+
 # =====================
 # SEND CODE
 # =====================
-import requests
-import os
-
 @app.route("/send-code", methods=["POST"])
 def send_code():
     try:
@@ -144,7 +144,10 @@ def send_code():
         url = "https://api.brevo.com/v3/smtp/email"
 
         payload = {
-            "sender": {"name": "China Center", "email": "majdahmadqaraa@gmail.com"},
+            "sender": {
+                "name": "China Center",
+                "email": "majdahmadqaraa@gmail.com"
+            },
             "to": [{"email": email}],
             "subject": "Password Reset",
             "htmlContent": f"<h3>Your code is: {code}</h3>"
@@ -158,13 +161,14 @@ def send_code():
 
         response = requests.post(url, json=payload, headers=headers)
 
-        print(response.text)
+        print("EMAIL RESPONSE:", response.text)
 
         return jsonify({"success": True})
 
     except Exception as e:
         print("BREVO ERROR:", e)
         return jsonify({"success": False})
+
 
 # =====================
 # RESET PASSWORD
@@ -208,6 +212,7 @@ def reset_password():
     except Exception as e:
         print("RESET ERROR:", e)
         return jsonify({"success": False})
+
 
 # =====================
 # RUN
