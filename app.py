@@ -130,25 +130,43 @@ def login():
 @app.route("/send-code", methods=["POST"])
 def send_code():
     try:
+        # 🔥 تحقق من البيانات
         data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "No data received ❌"})
+
         email = data.get("email")
-
         if not email:
-            return jsonify({"success": False})
+            return jsonify({"success": False, "message": "Email required ❌"})
 
+        # =====================
+        # 🔥 تحقق من قاعدة البيانات
+        # =====================
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cursor.fetchone()
+        try:
+            cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+            user = cursor.fetchone()
+        except Exception as db_error:
+            print("DB ERROR:", db_error)
+            conn.close()
+            return jsonify({"success": False, "message": "Database error ❌"})
+
         conn.close()
 
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
 
+        # =====================
+        # 🔥 توليد الكود
+        # =====================
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
+        # =====================
+        # 🔥 إعداد الإيميل
+        # =====================
         sender = "majdahmadqaraa@gmail.com"
         password = "eyux ccoi gklv twbd"
 
@@ -157,16 +175,27 @@ def send_code():
         msg["From"] = sender
         msg["To"] = email
 
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.login(sender, password)
-        server.send_message(msg)
-        server.quit()
+        # =====================
+        # 🔥 إرسال الإيميل
+        # =====================
+        try:
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+            server.ehlo()
+            server.login(sender, password)
+            server.sendmail(sender, email, msg.as_string())
+            server.quit()
+
+            print("EMAIL SENT SUCCESS ✅")
+
+        except Exception as mail_error:
+            print("EMAIL ERROR:", mail_error)
+            return jsonify({"success": False, "message": "Email failed ❌"})
 
         return jsonify({"success": True})
 
     except Exception as e:
-        print("EMAIL ERROR:", e)
-        return jsonify({"success": False})
+        print("GENERAL ERROR:", e)
+        return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
 # RESET PASSWORD
