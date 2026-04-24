@@ -149,8 +149,8 @@ def send_code():
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "your_email@gmail.com"
-        password = "your_app_password"
+        sender = "majdahmadqaraa@gmail.com"
+        password = "eyux ccoi gklv twbd"
 
         msg = MIMEText(f"Your reset code is: {code}")
         msg["Subject"] = "Password Reset"
