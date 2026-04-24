@@ -117,6 +117,9 @@ def login():
 # =====================
 # SEND CODE
 # =====================
+import requests
+import os
+
 @app.route("/send-code", methods=["POST"])
 def send_code():
     try:
@@ -124,7 +127,7 @@ def send_code():
         email = data.get("email")
 
         if not email:
-            return jsonify({"success": False, "message": "Email required ❌"})
+            return jsonify({"success": False})
 
         conn = get_db()
         cursor = conn.cursor()
@@ -135,21 +138,33 @@ def send_code():
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
 
-        # 🔥 توليد الكود فقط
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        print("RESET CODE:", code)  # 🔥 مهم
+        url = "https://api.brevo.com/v3/smtp/email"
 
-        # 🔥 رجع الكود مباشرة بدون إيميل
-        return jsonify({
-            "success": True,
-            "code": code
-        })
+        payload = {
+            "sender": {"name": "China Center", "email": "majdahmadqaraa@gmail.com"},
+            "to": [{"email": email}],
+            "subject": "Password Reset",
+            "htmlContent": f"<h3>Your code is: {code}</h3>"
+        }
+
+        headers = {
+            "accept": "application/json",
+            "api-key": os.environ.get("BREVO_API_KEY"),
+            "content-type": "application/json"
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        print(response.text)
+
+        return jsonify({"success": True})
 
     except Exception as e:
-        print("SEND CODE ERROR:", e)
-        return jsonify({"success": False, "message": "Server error ❌"})
+        print("BREVO ERROR:", e)
+        return jsonify({"success": False})
 
 # =====================
 # RESET PASSWORD
