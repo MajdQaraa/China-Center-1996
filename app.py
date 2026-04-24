@@ -263,19 +263,6 @@ def reset_password():
             "error": str(e)
         })
 
-@app.route("/")
-def home():
-    return send_from_directory(".", "index.html")
-
-
-@app.route("/ping")
-def ping():
-    return "OK"
-
-
-@app.route("/<path:path>")
-def static_files(path):
-    return send_from_directory(".", path)
 
 # =====================
 # RUN
