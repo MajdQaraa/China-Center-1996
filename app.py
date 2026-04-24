@@ -191,24 +191,43 @@ def send_code():
 @app.route("/reset-password", methods=["POST"])
 def reset_password():
     try:
-        data = request.get_json()
+        print("RESET ENDPOINT HIT")
+
+        data = request.get_json(silent=True)
+
+        # 🔴 تأكد من وصول البيانات
+        if not data:
+            return jsonify({
+                "success": False,
+                "message": "No JSON data received ❌"
+            })
 
         email = data.get("email")
         code = data.get("code")
         new_password = data.get("new_password")
 
         if not email or not code or not new_password:
-            return jsonify({"success": False, "message": "Missing data ❌"})
+            return jsonify({
+                "success": False,
+                "message": "Missing fields ❌"
+            })
 
-        # 🔥 حماية من KeyError
+        # 🔥 حماية من reset_codes
         stored_code = reset_codes.get(email)
 
         if not stored_code:
-            return jsonify({"success": False, "message": "Code not found or expired ❌"})
+            return jsonify({
+                "success": False,
+                "message": "Code not found or expired ❌"
+            })
 
         if stored_code != code:
-            return jsonify({"success": False, "message": "Wrong code ❌"})
+            return jsonify({
+                "success": False,
+                "message": "Wrong code ❌"
+            })
 
+        # 🔐 تحديث كلمة السر
         hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
         hashed = sqlite3.Binary(hashed)
 
@@ -223,12 +242,19 @@ def reset_password():
         conn.commit()
         conn.close()
 
+        # 🧹 حذف الكود بعد النجاح
         reset_codes.pop(email, None)
 
-        return jsonify({"success": True})
+        return jsonify({
+            "success": True,
+            "message": "Password updated successfully ✅"
+        })
 
     except Exception as e:
+        import traceback
         print("RESET ERROR:", e)
+        print(traceback.format_exc())
+
         return jsonify({
             "success": False,
             "message": "Server error ❌",
