@@ -193,29 +193,31 @@ def reset_password():
     try:
         print("RESET ENDPOINT HIT")
 
+        # 🔥 قراءة JSON بشكل آمن
         data = request.get_json(silent=True)
 
-        # 🔴 تأكد من وصول البيانات
+        # 🔥 fallback لو ما وصل JSON
         if not data:
             return jsonify({
                 "success": False,
-                "message": "No JSON data received ❌"
+                "message": "No data received ❌"
             })
 
         email = data.get("email")
         code = data.get("code")
         new_password = data.get("new_password")
 
+        # 🔥 تحقق من البيانات
         if not email or not code or not new_password:
             return jsonify({
                 "success": False,
                 "message": "Missing fields ❌"
             })
 
-        # 🔥 حماية من reset_codes
+        # 🔥 تحقق الكود
         stored_code = reset_codes.get(email)
 
-        if not stored_code:
+        if stored_code is None:
             return jsonify({
                 "success": False,
                 "message": "Code not found or expired ❌"
@@ -227,7 +229,7 @@ def reset_password():
                 "message": "Wrong code ❌"
             })
 
-        # 🔐 تحديث كلمة السر
+        # 🔐 تحديث الباسورد
         hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
         hashed = sqlite3.Binary(hashed)
 
@@ -261,6 +263,19 @@ def reset_password():
             "error": str(e)
         })
 
+@app.route("/")
+def home():
+    return send_from_directory(".", "index.html")
+
+
+@app.route("/ping")
+def ping():
+    return "OK"
+
+
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory(".", path)
 
 # =====================
 # RUN
