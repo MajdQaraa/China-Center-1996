@@ -1,49 +1,47 @@
-document.getElementById("resetForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
+document.addEventListener("DOMContentLoaded", function () {
 
-    const emailInput = document.getElementById("email").value.trim();
-    const code = document.getElementById("code").value.trim();
-    const newPassword = document.getElementById("newPassword").value.trim();
+    const form = document.getElementById("forgotForm");
 
-    // 🔥 نجيب الإيميل من localStorage (إذا موجود)
-    const savedEmail = localStorage.getItem("resetEmail");
-
-    // إذا المستخدم ما كتب إيميل، نستخدم المخزن
-    const email = emailInput || savedEmail;
-
-    if (!email) {
-        alert("Email is required ❌");
+    if (!form) {
+        console.error("Form not found ❌");
         return;
     }
 
-    try {
-        const response = await fetch("/reset-password", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: email,
-                code: code,
-                new_password: newPassword
-            })
-        });
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
 
-        const data = await response.json();
+        const email = document.getElementById("email").value.trim();
 
-        if (data.success) {
-            alert("Password reset successfully ✅");
+        try {
+            const response = await fetch("/send-code", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email })
+            });
 
-            // 🔥 نحذف الإيميل المخزن
-            localStorage.removeItem("resetEmail");
+            const data = await response.json();
 
-            window.location.href = "index.html";
-        } else {
-            alert(data.message || "Reset failed ❌");
+            if (data.success) {
+
+                if (data.code) {
+                    alert("Your code: " + data.code);
+                } else {
+                    alert("Code sent to email ✅");
+                }
+
+                localStorage.setItem("resetEmail", email);
+                window.location.href = "reset-password.html";
+
+            } else {
+                alert(data.message || "Failed ❌");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Server error ❌");
         }
+    });
 
-    } catch (error) {
-        console.error(error);
-        alert("Server error ❌");
-    }
 });
