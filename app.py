@@ -127,7 +127,7 @@ def send_code():
         email = data.get("email")
 
         if not email:
-            return jsonify({"success": False})
+            return jsonify({"success": False, "message": "Email required ❌"})
 
         conn = get_db()
         cursor = conn.cursor()
@@ -161,22 +161,28 @@ def send_code():
 
         response = requests.post(url, json=payload, headers=headers)
 
+        # 🔥 Debug كامل
         print("STATUS CODE:", response.status_code)
-        print("EMAIL RESPONSE:", response.text)
+        print("RESPONSE:", response.text)
 
-        # 🔥 التعديل المهم هنا
+        # 🔥 تحليل النتيجة الحقيقي
         if response.status_code == 201:
             return jsonify({"success": True})
         else:
             return jsonify({
                 "success": False,
-                "message": "Email not sent",
+                "message": "Brevo failed to send email ❌",
+                "status_code": response.status_code,
                 "debug": response.text
             })
 
     except Exception as e:
         print("BREVO ERROR:", e)
-        return jsonify({"success": False})
+        return jsonify({
+            "success": False,
+            "message": "Server error ❌",
+            "error": str(e)
+        })
 
 
 # =====================
