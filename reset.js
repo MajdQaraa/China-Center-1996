@@ -1,12 +1,12 @@
-document.getElementById("resetForm").addEventListener("submit", async function(e) {
+document.getElementById("resetForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
-    const code = document.getElementById("code").value.trim();
-    const newPassword = document.getElementById("newPassword").value.trim();
+    const email = document.getElementById("email").value;
+    const code = document.getElementById("code").value;
+    const newPassword = document.getElementById("newPassword").value;
 
     try {
-        const response = await fetch("/reset-password", {
+        const res = await fetch("https://YOUR-BACKEND-URL/reset-password", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -18,17 +18,19 @@ document.getElementById("resetForm").addEventListener("submit", async function(e
             })
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
         if (data.success) {
-            alert("Password reset successfully ✅");
-            window.location.href = "log-in.html";
+            alert("Password changed successfully ✅");
+
+            // 🔥 يرجعك على صفحة تسجيل الدخول
+            window.location.href = "index.html";
         } else {
-            alert(data.message || "Invalid code ❌");
+            alert(data.message || "Something went wrong ❌");
         }
 
     } catch (error) {
-        console.error(error);
+        console.error("Error:", error);
         alert("Server error ❌");
     }
 });
