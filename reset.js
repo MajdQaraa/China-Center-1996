@@ -6,7 +6,7 @@ document.getElementById("resetForm").addEventListener("submit", async function(e
     const newPassword = document.getElementById("newPassword").value.trim();
 
     try {
-        const response = await fetch("https://china-center-1996.onrender.com/reset-password", {
+        const response = await fetch("/reset-password", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

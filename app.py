@@ -9,46 +9,30 @@ from email.mime.text import MIMEText
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
+# 🔥 تخزين الأكواد مؤقت
 reset_codes = {}
 
 # =====================
-# DATABASE
-# =====================
-def get_db():
-    conn = sqlite3.connect("/tmp/users.db")  # 🔥 مهم
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def create_table():
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        password BLOB
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-create_table()
-
-# =====================
-# HOME
+# HOME PAGE (حل 404)
 # =====================
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(".", "index.html")  # أو log-in.html إذا هذا اسم صفحتك
 
 # =====================
-# STATIC FILES
+# SERVE FILES (HTML / CSS / JS)
 # =====================
 @app.route("/<path:path>")
 def static_files(path):
     return send_from_directory(".", path)
+
+# =====================
+# DB
+# =====================
+def get_db():
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # =====================
 # SIGNUP
@@ -64,7 +48,7 @@ def signup():
         if not email or not password:
             return jsonify({"success": False, "message": "Missing data ❌"})
 
-        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         hashed_password = sqlite3.Binary(hashed_password)
 
         conn = get_db()
@@ -76,7 +60,6 @@ def signup():
         )
 
         conn.commit()
-        conn.close()
 
         return jsonify({"success": True})
 
@@ -85,7 +68,7 @@ def signup():
 
     except Exception as e:
         print("SIGNUP ERROR:", e)
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
 # LOGIN
@@ -103,20 +86,21 @@ def login():
 
         cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
-        conn.close()
 
         if user:
-            if bcrypt.checkpw(password.encode(), bytes(user["password"])):
+            stored_password = bytes(user["password"])
+
+            if bcrypt.checkpw(password.encode('utf-8'), stored_password):
                 return jsonify({"success": True})
 
         return jsonify({"success": False, "message": "Wrong email or password ❌"})
 
     except Exception as e:
         print("LOGIN ERROR:", e)
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
-# SEND CODE
+# SEND CODE (EMAIL)
 # =====================
 @app.route("/send-code", methods=["POST"])
 def send_code():
@@ -124,11 +108,14 @@ def send_code():
         data = request.get_json()
         email = data.get("email")
 
+        if not email:
+            return jsonify({"success": False})
+
         conn = get_db()
         cursor = conn.cursor()
+
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
-        conn.close()
 
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
@@ -136,8 +123,8 @@ def send_code():
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "your_email@gmail.com"
-        password = "your_app_password"
+        sender = "majdahmadqaraa@gmail.com"
+        password = "ofyf nskl tcse brne"
 
         msg = MIMEText(f"Your reset code is: {code}")
         msg["Subject"] = "Password Reset"
@@ -153,7 +140,7 @@ def send_code():
 
     except Exception as e:
         print("EMAIL ERROR:", e)
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False})
 
 # =====================
 # RESET PASSWORD
@@ -167,13 +154,16 @@ def reset_password():
         code = data.get("code")
         new_password = data.get("new_password")
 
+        if not email or not code or not new_password:
+            return jsonify({"success": False, "message": "Missing data ❌"})
+
         if email not in reset_codes:
             return jsonify({"success": False, "message": "Send code first ❌"})
 
         if reset_codes[email] != code:
             return jsonify({"success": False, "message": "Wrong code ❌"})
 
-        hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
         hashed_password = sqlite3.Binary(hashed_password)
 
         conn = get_db()
@@ -184,8 +174,10 @@ def reset_password():
             (hashed_password, email)
         )
 
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "message": "Email not found ❌"})
+
         conn.commit()
-        conn.close()
 
         reset_codes.pop(email)
 
@@ -193,7 +185,7 @@ def reset_password():
 
     except Exception as e:
         print("RESET ERROR:", e)
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
 # RUN

@@ -4,7 +4,7 @@ document.getElementById("forgotForm").addEventListener("submit", async function(
     const email = document.getElementById("email").value.trim();
 
     try {
-        const response = await fetch("https://china-center-1996.onrender.com/send-code", {
+        const response = await fetch("/send-code", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

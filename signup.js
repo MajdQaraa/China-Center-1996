@@ -11,7 +11,7 @@ document.getElementById("signupForm").addEventListener("submit", async function(
     }
 
     try {
-        const response = await fetch("https://china-center-1996.onrender.com/signup", {
+        const response = await fetch("/signup", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ email, password })
