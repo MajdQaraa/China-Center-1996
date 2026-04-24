@@ -6,7 +6,7 @@ document.getElementById("resetForm").addEventListener("submit", async function (
     const newPassword = document.getElementById("newPassword").value;
 
     try {
-        const res = await fetch("https://YOUR-BACKEND-URL/reset-password", {
+        const res = await fetch("https://china-center-1996.up.railway.app/reset-password", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -20,10 +20,12 @@ document.getElementById("resetForm").addEventListener("submit", async function (
 
         const data = await res.json();
 
+        console.log("RESPONSE:", data); // 🔥 للتشخيص
+
         if (data.success) {
             alert("Password changed successfully ✅");
 
-            // 🔥 يرجعك على صفحة تسجيل الدخول
+            // 🔥 يرجعك لصفحة تسجيل الدخول
             window.location.href = "index.html";
         } else {
             alert(data.message || "Something went wrong ❌");
