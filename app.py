@@ -198,12 +198,15 @@ def reset_password():
         new_password = data.get("new_password")
 
         if not email or not code or not new_password:
-            return jsonify({"success": False})
+            return jsonify({"success": False, "message": "Missing data ❌"})
 
-        if email not in reset_codes:
-            return jsonify({"success": False, "message": "Send code first ❌"})
+        # 🔥 حماية من KeyError
+        stored_code = reset_codes.get(email)
 
-        if reset_codes[email] != code:
+        if not stored_code:
+            return jsonify({"success": False, "message": "Code not found or expired ❌"})
+
+        if stored_code != code:
             return jsonify({"success": False, "message": "Wrong code ❌"})
 
         hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
@@ -220,13 +223,17 @@ def reset_password():
         conn.commit()
         conn.close()
 
-        reset_codes.pop(email)
+        reset_codes.pop(email, None)
 
         return jsonify({"success": True})
 
     except Exception as e:
         print("RESET ERROR:", e)
-        return jsonify({"success": False})
+        return jsonify({
+            "success": False,
+            "message": "Server error ❌",
+            "error": str(e)
+        })
 
 
 # =====================
