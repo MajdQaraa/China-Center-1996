@@ -4,6 +4,7 @@ import sqlite3
 import bcrypt
 import smtplib
 import random
+import os
 from email.mime.text import MIMEText
 
 app = Flask(__name__, static_folder='.')
@@ -13,26 +14,47 @@ CORS(app)
 reset_codes = {}
 
 # =====================
-# HOME PAGE (حل 404)
+# DB (FIXED)
+# =====================
+def get_db():
+    db_path = os.path.join(os.getcwd(), "users.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# 🔥 إنشاء قاعدة البيانات تلقائي
+def create_database():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE,
+        password BLOB
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+    print("Database ready ✅")
+
+# 🔥 تشغيلها أول ما السيرفر يشتغل
+create_database()
+
+# =====================
+# HOME PAGE
 # =====================
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")  # أو log-in.html إذا هذا اسم صفحتك
+    return send_from_directory(".", "index.html")
 
 # =====================
-# SERVE FILES (HTML / CSS / JS)
+# SERVE FILES
 # =====================
 @app.route("/<path:path>")
 def static_files(path):
     return send_from_directory(".", path)
-
-# =====================
-# DB
-# =====================
-def get_db():
-    conn = sqlite3.connect("users.db")
-    conn.row_factory = sqlite3.Row
-    return conn
 
 # =====================
 # SIGNUP
@@ -60,6 +82,7 @@ def signup():
         )
 
         conn.commit()
+        conn.close()
 
         return jsonify({"success": True})
 
@@ -87,6 +110,8 @@ def login():
         cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
 
+        conn.close()
+
         if user:
             stored_password = bytes(user["password"])
 
@@ -100,7 +125,7 @@ def login():
         return jsonify({"success": False, "message": "Server error ❌"})
 
 # =====================
-# SEND CODE (EMAIL)
+# SEND CODE
 # =====================
 @app.route("/send-code", methods=["POST"])
 def send_code():
@@ -116,6 +141,7 @@ def send_code():
 
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
+        conn.close()
 
         if not user:
             return jsonify({"success": False, "message": "Email not found ❌"})
@@ -123,8 +149,8 @@ def send_code():
         code = str(random.randint(100000, 999999))
         reset_codes[email] = code
 
-        sender = "majdahmadqaraa@gmail.com"
-        password = "ofyf nskl tcse brne"
+        sender = "your_email@gmail.com"
+        password = "your_app_password"
 
         msg = MIMEText(f"Your reset code is: {code}")
         msg["Subject"] = "Password Reset"
@@ -174,10 +200,8 @@ def reset_password():
             (hashed_password, email)
         )
 
-        if cursor.rowcount == 0:
-            return jsonify({"success": False, "message": "Email not found ❌"})
-
         conn.commit()
+        conn.close()
 
         reset_codes.pop(email)
 
